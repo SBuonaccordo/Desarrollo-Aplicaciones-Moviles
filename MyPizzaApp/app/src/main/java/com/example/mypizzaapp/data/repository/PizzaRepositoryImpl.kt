@@ -6,13 +6,23 @@ import com.example.mypizzaapp.domain.repository.PizzaRepository
 
 class PizzaRepositoryImpl: PizzaRepository {
 
-    private val pizza = listOf(
+    private val pizzas = listOf(
         Pizza("Pepperoni", 180.0, R.drawable.pepperoni),
         Pizza( "Hawaiana", 160.0, R.drawable.hawaiana),
-        Pizza( "Mexicana", 190.0, R.drawable.mexicana)
+        Pizza( "Mexicana", 190.0, R.drawable.mexicana),
+        Pizza("Pepperoni", 180.0, R.drawable.pepperoni),
+        Pizza( "Hawaiana", 160.0, R.drawable.hawaiana),
+        Pizza("Pepperoni", 180.0, R.drawable.pepperoni),
+        Pizza( "Hawaiana", 160.0, R.drawable.hawaiana),
+        Pizza("Pepperoni", 180.0, R.drawable.pepperoni),
+        Pizza( "Hawaiana", 160.0, R.drawable.hawaiana)
     )
 
     override fun getPizzaOfTheDay(): Pizza {
-        return pizza.random()
+        return pizzas.random()
+    }
+
+    override fun getAllPizzas(): List<Pizza> {
+        return pizzas
     }
 }

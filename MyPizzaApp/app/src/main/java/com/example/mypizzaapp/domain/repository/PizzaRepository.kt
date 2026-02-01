@@ -4,4 +4,5 @@ import com.example.mypizzaapp.domain.models.Pizza
 
 interface PizzaRepository {
     fun getPizzaOfTheDay(): Pizza
+    fun getAllPizzas(): List<Pizza>
 }
