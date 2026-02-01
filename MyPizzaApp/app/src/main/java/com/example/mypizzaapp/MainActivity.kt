@@ -8,6 +8,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.content.MediaType.Companion.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -47,6 +48,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mypizzaapp.domain.models.Pizza
 import com.example.mypizzaapp.ui.PizzaViewModel
 import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.remember
+import androidx.compose.ui.semantics.Role.Companion.Image
+import androidx.navigation.NavController
+import androidx.navigation.NavHost
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 
 import com.example.mypizzaapp.ui.theme.PizzeriaTheme
 
@@ -59,7 +67,7 @@ class MainActivity : ComponentActivity() {
             PizzeriaTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     val inner = innerPadding
-                    PizzaMenuScream()
+                    PizzeriaApp()
                 }
             }
         }
@@ -67,64 +75,74 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
+fun PizzeriaApp(){
+    val navController = rememberNavController()
+    NavHost(
+        navController = navController,
+        startDestination = "menu"
+    ){
+        composable("menu"){
+            MenuScream(navController)
+
+        }
+        composable("detalle/{pizzaName}"){ backstackEntry ->
+            val pizzaName = backstackEntry.arguments?.getString("pizzaName")
+
+        }
+    }
+
+
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MenuScream(navController: NavController, viewModel: PizzaViewModel = viewModel()
+){
+    val pizzas = viewModel.pizzaList
+
+    Scaffold(
+        topBar = { TopAppBar(title = {Text("Menú de Pizza") }) }
+    ) { padding ->
+        LazyColumn(contentPadding = padding) {
+            items(pizzas){pizza ->
+                PizzaItem(pizza = pizza){
+                    navController.navigate("detalle/${pizza.type}")
+                }
+            }
+        }
+    }
+
 }
 
 @Composable
-fun PizzaScreen(viewModel: PizzaViewModel = viewModel()) {
-    val pizza = viewModel.pizzaState
-
-    Column(modifier =
-        Modifier.fillMaxSize()
-            .background(Color(0xFFFFF8E1))
-            .padding(WindowInsets.safeDrawing.asPaddingValues())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+fun PizzaItem(pizza: Pizza, onClick : () -> Unit){
+    Card(modifier = Modifier.fillMaxWidth()
+        .padding(8.dp)
+        .clickable{ onClick()},
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-        Text(
-            text = "Pizza del dia",
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFFD84315),
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        )
-
-        Card(
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.fillMaxWidth().clickable{
-
-            }
-        ) {
-            Row(modifier =
-                Modifier.padding(16.dp)
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text(pizza.type, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text("Precio: $${pizza.price}", fontSize = 18.sp, color = Color.Gray)
-                }
-                Image(
-                    painter = painterResource(id = pizza.imageRes),
-                    contentDescription = pizza.type,
-                    modifier = Modifier.size(80.dp)
+            Image(
+               painter = painterResource(id = pizza.imageRes),
+                contentDescription = pizza.type,
+                modifier = Modifier.size(80.dp)
+            )
+            Spacer(Modifier.width(16.dp))
+            Column {
+                Text(pizza.type, style = MaterialTheme.typography.titleMedium)
+                Text(
+                    text = "Precio: $${pizza.price}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.secondary
                 )
             }
         }
-
-        Button(
-            onClick = { viewModel.refreshPizza() },
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        ) {
-            Text("Cambiar pizza del día")
-        }
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -188,6 +206,39 @@ fun PizzaCard(pizza: Pizza){
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.secondary
                 )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PizzaDetailScreen(pizzaName: String?,
+                      viewModel: PizzaViewModel = viewModel()
+){
+    val pizza = remember(pizzaName){ viewModel.finPizzasByName(pizzaName) }
+
+    Scaffold(
+        topBar = { TopAppBar(title = { Text("Detalle de ${pizza?.type ?: pizzaName}")})}
+    ) {
+        padding ->
+        Column(
+            modifier = Modifier.padding(padding)
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            if (pizza != null){
+                Text("Tipo: ${pizza.type}", style = MaterialTheme.typography.titleLarge)
+                Spacer(Modifier.height(8.dp))
+                Text("Precio: $${pizza.price}")
+                Spacer(Modifier.height(8.dp))
+                Image(
+                    painter = painterResource(id = pizza.imageRes),
+                    contentDescription = pizza.type,
+                    modifier = Modifier.size(160.dp)
+                )
+            }else {
+                Text("No se encontró información para '$pizzaName'")
             }
         }
     }
